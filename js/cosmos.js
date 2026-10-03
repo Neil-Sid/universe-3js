@@ -138,7 +138,7 @@ export class Cosmos {
   constructor(scene) {
     this.near = { reach: 90, all: true }
     this.far = { reach: 270, all: false }
-    this.cells = new Map()                         // key -> { list, g? }
+    this.cells = new Map()                         // cellId -> { i, j, k, list }
     this.web = galaxySprites(420000, { gain: 1 })
     this.glow = blobSprites(300000, { gain: 1, fadeNear: [6, 18], maxPx: 70 })
     this.named = galaxySprites(REAL_GALAXIES.length + 1, { gain: 1 })
@@ -188,6 +188,8 @@ export class Cosmos {
   }
 
   cellKey(i, j, k) { return i + ',' + j + ',' + k }
+  // the Map key: a number, so lookups build no strings (|i|, |j|, |k| stay far below 1024 inside the observable sphere)
+  cellId(i, j, k) { return ((i + 1024) * 2048 + j + 1024) * 2048 + k + 1024 }
 
   // Stream cells around the camera (Mpc). Time-sliced; re-packs instance buffers on change.
   update(cam, budget = 6) {
@@ -198,22 +200,24 @@ export class Cosmos {
     if (key !== this.key) {
       this.key = key
       this.want = []
+      this.wantAt = 0                                // want[] before this index is all streamed in
       for (let i = -R; i <= R; i++) for (let j = -R; j <= R; j++) for (let k = -R; k <= R; k++) {
         const d = Math.hypot(i, j, k) * WEB_CELL
         if (d > this.far.reach + WEB_CELL) continue
         const x = (ci + i + 0.5) * WEB_CELL, y = (cj + j + 0.5) * WEB_CELL, z = (ck + k + 0.5) * WEB_CELL
         if (Math.hypot(x, y, z) > OBS + WEB_CELL) continue
-        this.want.push([ci + i, cj + j, ck + k, d])
+        this.want.push([ci + i, cj + j, ck + k, d, this.cellId(ci + i, cj + j, ck + k)])
       }
       this.want.sort((a, b) => a[3] - b[3])
       this.dirty = true
     }
     let added = 0
-    for (const [i, j, k] of this.want) {
-      const key = this.cellKey(i, j, k)
-      if (this.cells.has(key)) continue
+    // wanted cells are never evicted, so the cursor only moves forward until the view changes cell
+    for (; this.wantAt < this.want.length; this.wantAt++) {
+      const [i, j, k, , id] = this.want[this.wantAt]
+      if (this.cells.has(id)) continue
       if (performance.now() - t0 > budget) break
-      this.cells.set(key, { i, j, k, list: cellGalaxies(i, j, k) }); added++
+      this.cells.set(id, { i, j, k, list: cellGalaxies(i, j, k) }); added++
     }
     // re-pack when the view moved a cell, or every half second while new cells stream in
     const now = performance.now()
@@ -225,7 +229,7 @@ export class Cosmos {
     for (const t = performance.now(); this.job && performance.now() - t < 3;) if (this.job.next().done) this.job = null
     this.dirty = false
     if (this.cells.size > this.want.length * 1.5) {
-      const keep = new Set(this.want.map(([i, j, k]) => this.cellKey(i, j, k)))
+      const keep = new Set(this.want.map(w => w[4]))
       for (const key of this.cells.keys()) if (!keep.has(key)) this.cells.delete(key)
     }
   }
@@ -276,11 +280,11 @@ export class Cosmos {
     const ci = Math.floor(p[0] / WEB_CELL), cj = Math.floor(p[1] / WEB_CELL), ck = Math.floor(p[2] / WEB_CELL)
     const R = Math.ceil(r / WEB_CELL)
     for (let i = -R; i <= R; i++) for (let j = -R; j <= R; j++) for (let k = -R; k <= R; k++) {
-      const cell = this.cells.get(this.cellKey(ci + i, cj + j, ck + k))
+      const cell = this.cells.get(this.cellId(ci + i, cj + j, ck + k))
       if (!cell) continue
       for (const rec of cell.list) {
-        const d = Math.hypot(rec.x - p[0], rec.y - p[1], rec.z - p[2])
-        if (d < r) fn(rec.g || (rec.g = galaxyFromRecord(rec, this.cellKey(cell.i, cell.j, cell.k))), d)
+        const dx = rec.x - p[0], dy = rec.y - p[1], dz = rec.z - p[2], d2 = dx * dx + dy * dy + dz * dz
+        if (d2 < r * r) fn(rec.g || (rec.g = galaxyFromRecord(rec, this.cellKey(cell.i, cell.j, cell.k))), Math.sqrt(d2))
       }
     }
   }
