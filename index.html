@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Continuum</title>
+<meta name="description" content="The universe at 1:1 scale in WebGPU: from a planet's surface to the edge of the observable universe.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='5' fill='%23e8c88a'/><ellipse cx='16' cy='16' rx='14' ry='5' fill='none' stroke='%23e8c88a' stroke-width='1.5'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.webgpu.js",
+    "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.webgpu.js",
+    "three/tsl": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.tsl.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<canvas id="view"></canvas>
+<div id="labels"></div>
+
+<header id="where">
+  <ol id="crumbs"></ol>
+  <h1 id="place">—</h1>
+  <p id="placeNote"></p>
+</header>
+
+<aside id="ladder" aria-label="Scale">
+  <div id="rail"></div>
+  <div id="needle"><span id="needleText"></span></div>
+</aside>
+
+<section id="readout">
+  <div><span class="k">speed</span><b id="speed">0</b><span id="mult" class="dim"></span></div>
+  <div><span class="k">surface</span><b id="surf">—</b></div>
+  <div><span class="k">date</span><b id="date">—</b><span id="warp" class="dim"></span></div>
+</section>
+
+<nav id="dest">
+  <div class="search"><input id="search" placeholder="Find: Saturn, Vega, Andromeda…" autocomplete="off" spellcheck="false"><ul id="results"></ul></div>
+  <button id="destBtn" aria-expanded="false">Destinations</button>
+  <div id="destList" hidden></div>
+</nav>
+
+<section id="sys" hidden>
+  <h3 id="sysName"></h3>
+  <p id="sysMeta"></p>
+  <ul id="sysList"></ul>
+</section>
+
+<article id="card" hidden>
+  <p id="cardKind"></p>
+  <h2 id="cardName"></h2>
+  <dl id="cardFacts"></dl>
+  <div class="actions">
+    <button id="goBtn">Go to <kbd>G</kbd></button>
+    <button id="lookBtn">Look <kbd>L</kbd></button>
+  </div>
+</article>
+
+<footer id="help">
+  <p><kbd>W A S D</kbd> fly · <kbd>R F</kbd> up/down · <kbd>Q E</kbd> roll · <kbd>Shift</kbd> ×10 · <kbd>Z</kbd> ×0.1 · <kbd>[ ]</kbd> throttle</p>
+  <p>drag look · right-drag orbit · wheel zoom to target · click select · double-click go</p>
+  <p><kbd>Space</kbd> pause · <kbd>, .</kbd> time warp · <kbd>/</kbd> real time · <kbd>O</kbd> orbits · <kbd>H</kbd> hide help · <kbd>Esc</kbd> stop</p>
+</footer>
+
+<div id="boot"><p>Assembling the universe…</p></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

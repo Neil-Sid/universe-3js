@@ -1,0 +1,15 @@
+{
+  "name": "continuum",
+  "version": "1.0.0",
+  "description": "The universe at 1:1 scale in the browser: WebGPU + three.js, from a planet's surface to the edge of the observable universe.",
+  "private": true,
+  "scripts": {
+    "start": "node tools/serve.cjs 5270",
+    "check": "node tools/check.cjs",
+    "build": "node tools/build.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "puppeteer-core": "^25.12.0"
+  }
+}

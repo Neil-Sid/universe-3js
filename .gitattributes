@@ -1,0 +1,4 @@
+# normalise line endings in the repo; images stay binary
+* text=auto
+*.png binary
+*.jpg binary
